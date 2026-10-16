@@ -1,0 +1,38 @@
+name: Daily MBOX snapshot
+
+# Render's free tier sleeps after ~15 min idle, so an external ping wakes the
+# service and asks it for the day's snapshot. Times are UTC; IST = UTC + 5:30.
+#
+#   12:20 UTC = 17:50 IST  (candle #4 closes -> exact box levels)
+#   12:25 UTC = 17:55 IST  (retry; the app skips it if the first one landed)
+#
+# GitHub's schedule is best-effort and can run a few minutes late — that is fine,
+# the box levels come from closed candles and stay identical.
+
+on:
+  schedule:
+    - cron: '20 12 * * 1-5'
+    - cron: '25 12 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger snapshot
+        env:
+          # Repository secret, e.g. https://mbox-alert.onrender.com/trigger?key=YOUR_SECRET
+          MBOX_TRIGGER_URL: ${{ secrets.MBOX_TRIGGER_URL }}
+        run: |
+          if [ -z "$MBOX_TRIGGER_URL" ]; then
+            echo "::error::Set the MBOX_TRIGGER_URL repository secret (Settings -> Secrets and variables -> Actions)"
+            exit 1
+          fi
+          # --max-time 180 waits through a Render free-tier cold start (~60s)
+          code=$(curl -sS --max-time 180 -o /tmp/mbox-response.json -w '%{http_code}' "$MBOX_TRIGGER_URL" || echo "000")
+          echo "HTTP $code"
+          cat /tmp/mbox-response.json || true
+          if [ "$code" != "200" ]; then
+            echo "::error::MBOX trigger failed with HTTP $code"
+            exit 1
+          fi

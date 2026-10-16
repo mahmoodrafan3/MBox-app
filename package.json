@@ -1,0 +1,29 @@
+{
+  "name": "mbox-alert",
+  "version": "1.0.0",
+  "description": "MBOX (5:30 PM IST box) chart snapshot from TradingView candles, sent daily to a Telegram channel as a PNG",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "snapshot": "node scripts/snapshot.js",
+    "preview": "node scripts/snapshot.js --no-send --save"
+  },
+  "keywords": [
+    "tradingview",
+    "mbox",
+    "xauusd",
+    "telegram",
+    "chart",
+    "snapshot"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@mathieuc/tradingview": "3.5.2",
+    "@napi-rs/canvas": "^0.1.60",
+    "dotenv": "^16.4.5"
+  }
+}
